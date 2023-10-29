@@ -50,16 +50,16 @@ const columns = [
 export default function UserTable() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [hasMore, setHasMore] = React.useState(false);
-  const [filterValue, setFilterValue] = React.useState("a");
+  const [filterValue, setFilterValue] = React.useState("");
   const [totalUsers, setTotalUsers] = React.useState(0);
-  const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
+  const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
 
   const hasSearchFilter = Boolean(filterValue);
 
   let list = useAsyncList({
-    async load({ signal, cursor }) {
+    async load({ signal, cursor, filterText }) {
       if (cursor) {
         setIsLoading(false);
       }
@@ -68,7 +68,7 @@ export default function UserTable() {
       // Otherwise, the cursor is the next URL to load, as returned from the previous page.
       const res = await fetch(
         cursor ||
-          `http://127.0.0.1:50000/users?offset=0&limit=10&filter=${filterValue}`,
+          `http://127.0.0.1:50000/users?offset=0&limit=10&filter=${filterText}`,
         {
           signal,
         }
@@ -120,6 +120,7 @@ export default function UserTable() {
   const onSearchChange = React.useCallback((value?: string) => {
     if (value) {
       setFilterValue(value);
+      list.setFilterText(value);
     } else {
       setFilterValue("");
     }
@@ -136,11 +137,11 @@ export default function UserTable() {
           <Input
             isClearable
             className="w-full sm:max-w-[44%]"
-            placeholder="Search by name..."
+            placeholder="Search by keyword..."
             startContent={<SearchIcon />}
-            value={filterValue}
+            value={list.filterText}
             onClear={() => onClear()}
-            onValueChange={onSearchChange}
+            onValueChange={list.setFilterText}
           />
           <div className="flex gap-3">
             <Dropdown>
