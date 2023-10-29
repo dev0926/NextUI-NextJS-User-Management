@@ -1,6 +1,6 @@
 export interface User {
   id: number;
-  registered: Date;
+  registered: string;
   firstName: string;
   middleName?: string;
   lastName: string;
@@ -8,9 +8,4 @@ export interface User {
   phoneNumber?: string;
   address?: string;
   adminNotes?: string;
-}
-
-export interface FetchData {
-  success: boolean;
-  data: User[];
 }
