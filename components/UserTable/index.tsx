@@ -15,6 +15,7 @@ import {
   DropdownMenu,
   DropdownItem,
   Input,
+  SortDescriptor,
 } from "@nextui-org/react";
 
 import { useInfiniteScroll } from "@nextui-org/use-infinite-scroll";
@@ -39,7 +40,7 @@ const columns = [
   { name: "ID", uid: "id", sortable: true },
   { name: "FRIST NAME", uid: "firstName", sortable: true },
   { name: "LAST NAME", uid: "lastName", sortable: true },
-  { name: "EMAIL", uid: "email" },
+  { name: "EMAIL", uid: "email", sortable: true },
   { name: "PHONE NUMBER", uid: "phoneNumber", sortable: true },
   { name: "ADDRESS", uid: "address", sortable: true },
   { name: "REGISTERED", uid: "registered", sortable: true },
@@ -50,29 +51,44 @@ const columns = [
 export default function UserTable() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [hasMore, setHasMore] = React.useState(false);
-  const [filterValue, setFilterValue] = React.useState("");
   const [totalUsers, setTotalUsers] = React.useState(0);
   const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
 
-  const hasSearchFilter = Boolean(filterValue);
+  const headerColumns = React.useMemo(() => {
+    return columns.filter((column) =>
+      Array.from(visibleColumns).includes(column.uid)
+    );
+  }, [visibleColumns]);
 
   let list = useAsyncList({
-    async load({ signal, cursor, filterText }) {
+    initialSortDescriptor: {
+      column: "id",
+      direction: "ascending",
+    },
+    async load({ signal, cursor, filterText, sortDescriptor }) {
       if (cursor) {
         setIsLoading(false);
       }
 
+      let url = new URL(
+        `http://127.0.0.1:50000/users?offset=0&limit=20&filter=${filterText}`
+      );
+
+      if (sortDescriptor) {
+        url.searchParams.append("sort_key", String(sortDescriptor.column));
+        url.searchParams.append(
+          "sort_direction",
+          String(sortDescriptor.direction)
+        );
+      }
+
       // If no cursor is available, then we're loading the first page.
       // Otherwise, the cursor is the next URL to load, as returned from the previous page.
-      const res = await fetch(
-        cursor ||
-          `http://127.0.0.1:50000/users?offset=0&limit=10&filter=${filterText}`,
-        {
-          signal,
-        }
-      );
+      const res = await fetch(cursor || url, {
+        signal,
+      });
       let json = await res.json();
 
       setHasMore(json.next !== null);
@@ -117,17 +133,8 @@ export default function UserTable() {
     }
   }, []);
 
-  const onSearchChange = React.useCallback((value?: string) => {
-    if (value) {
-      setFilterValue(value);
-      list.setFilterText(value);
-    } else {
-      setFilterValue("");
-    }
-  }, []);
-
   const onClear = React.useCallback(() => {
-    setFilterValue("");
+    list.setFilterText("");
   }, []);
 
   const topContent = React.useMemo(() => {
@@ -156,7 +163,7 @@ export default function UserTable() {
               <DropdownMenu
                 disallowEmptySelection
                 aria-label="Table Columns"
-                closeOnSelect={false}
+                closeOnSelect={true}
                 selectedKeys={visibleColumns}
                 selectionMode="multiple"
                 onSelectionChange={setVisibleColumns}
@@ -168,7 +175,11 @@ export default function UserTable() {
                 ))}
               </DropdownMenu>
             </Dropdown>
-            <Button color="primary" endContent={<PlusIcon />}>
+            <Button
+              color="primary"
+              endContent={<PlusIcon />}
+              onClick={() => {}}
+            >
               Add New
             </Button>
           </div>
@@ -183,7 +194,7 @@ export default function UserTable() {
         </div>
       </div>
     );
-  }, [filterValue, visibleColumns, onSearchChange, hasSearchFilter, list]);
+  }, [visibleColumns, list]);
 
   return (
     <Table
@@ -199,18 +210,19 @@ export default function UserTable() {
           </div>
         ) : null
       }
+      sortDescriptor={list.sortDescriptor}
+      onSortChange={list.sort}
       classNames={{
         base: "max-h-[650px]",
         table: "min-h-[400px]",
       }}
     >
-      <TableHeader columns={columns}>
-        {/* <TableColumn key="id">Id</TableColumn>
-        <TableColumn key="firstName">First Name</TableColumn>
-        <TableColumn key="lastName">Last Name</TableColumn>
-        <TableColumn key="phoneNumber">Phone Number</TableColumn>
-        <TableColumn key="actions">Actions</TableColumn> */}
-        {(column) => <TableColumn key={column.uid}>{column.name}</TableColumn>}
+      <TableHeader columns={headerColumns}>
+        {(column) => (
+          <TableColumn key={column.uid} allowsSorting={column.sortable}>
+            {column.name}
+          </TableColumn>
+        )}
       </TableHeader>
       <TableBody
         isLoading={isLoading}
