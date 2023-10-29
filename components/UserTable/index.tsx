@@ -16,6 +16,7 @@ import {
   DropdownItem,
   Input,
   SortDescriptor,
+  Tooltip,
 } from "@nextui-org/react";
 
 import { useInfiniteScroll } from "@nextui-org/use-infinite-scroll";
@@ -23,6 +24,9 @@ import { useAsyncList } from "@react-stately/data";
 import { User } from "@/config/types";
 import {
   ChevronDownIcon,
+  DeleteIcon,
+  EditIcon,
+  EyeIcon,
   PlusIcon,
   SearchIcon,
   VerticalDotsIcon,
@@ -113,19 +117,22 @@ export default function UserTable() {
     switch (columnKey) {
       case "actions":
         return (
-          <div className="relative flex justify-end items-center gap-2">
-            <Dropdown>
-              <DropdownTrigger>
-                <Button isIconOnly size="sm" variant="light">
-                  <VerticalDotsIcon className="text-default-300" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu aria-label="Actions Dropdown">
-                <DropdownItem aria-label="view">View</DropdownItem>
-                <DropdownItem aria-label="edit">Edit</DropdownItem>
-                <DropdownItem aria-label="delete">Delete</DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
+          <div className="relative flex items-center gap-2">
+            <Tooltip color="success" content="Details">
+              <span className="text-lg text-success cursor-pointer active:opacity-50">
+                <EyeIcon />
+              </span>
+            </Tooltip>
+            <Tooltip color="warning" content="Edit user">
+              <span className="text-lg text-warning cursor-pointer active:opacity-50">
+                <EditIcon />
+              </span>
+            </Tooltip>
+            <Tooltip color="danger" content="Delete user">
+              <span className="text-lg text-danger cursor-pointer active:opacity-50">
+                <DeleteIcon />
+              </span>
+            </Tooltip>
           </div>
         );
       default:
