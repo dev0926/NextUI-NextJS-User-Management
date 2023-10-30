@@ -1,5 +1,5 @@
 export const columns = [
-  { name: "ID", uid: "id", sortable: true, showable: true, editable: true },
+  { name: "ID", uid: "id", sortable: true, showable: true, editable: false },
   {
     name: "FRIST NAME",
     uid: "firstName",

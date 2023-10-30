@@ -37,6 +37,7 @@ import {
   columns,
 } from "@/config/data";
 import { ModalComponent } from "./Modal/ModalComponent";
+import axios from "axios";
 
 export default function UserTable() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -105,6 +106,18 @@ export default function UserTable() {
     onLoadMore: list.loadMore,
   });
 
+  const onDelete = (data: User) => {
+    axios
+      .post("http://127.0.0.1:50000/users/delete", data)
+      .then((res) => {
+        console.log(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    list.reload();
+  };
+
   const renderCell = React.useCallback((user: User, columnKey: React.Key) => {
     const cellValue = user[columnKey as keyof User];
 
@@ -137,7 +150,12 @@ export default function UserTable() {
               </span>
             </Tooltip>
             <Tooltip color="danger" content="Delete user">
-              <span className="text-lg text-danger cursor-pointer active:opacity-50">
+              <span
+                className="text-lg text-danger cursor-pointer active:opacity-50"
+                onClick={() => {
+                  onDelete(user);
+                }}
+              >
                 <DeleteIcon />
               </span>
             </Tooltip>
@@ -194,6 +212,7 @@ export default function UserTable() {
               color="primary"
               endContent={<PlusIcon />}
               onClick={() => {
+                setModalData(undefined);
                 setModalType("add");
                 onOpen();
               }}
@@ -262,6 +281,7 @@ export default function UserTable() {
         onClose={onClose}
         type={modalType}
         data={modalData}
+        userCount={totalUsers}
       />
     </>
   );
