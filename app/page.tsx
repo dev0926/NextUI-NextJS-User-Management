@@ -1,5 +1,5 @@
 import { ThemeSwitch } from "@/components/theme-switch";
-import UserTable from "@/components/UserTable";
+import UserTable from "@/components/UserTable/UserTable";
 
 export default async function Home() {
   return (

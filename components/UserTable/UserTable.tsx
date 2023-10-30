@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -15,8 +15,8 @@ import {
   DropdownMenu,
   DropdownItem,
   Input,
-  SortDescriptor,
   Tooltip,
+  useDisclosure,
 } from "@nextui-org/react";
 
 import { useInfiniteScroll } from "@nextui-org/use-infinite-scroll";
@@ -29,36 +29,30 @@ import {
   EyeIcon,
   PlusIcon,
   SearchIcon,
-  VerticalDotsIcon,
 } from "../icons";
 
-const INITIAL_VISIBLE_COLUMNS = [
-  "id",
-  "firstName",
-  "lastName",
-  "phoneNumber",
-  "actions",
-];
-
-const columns = [
-  { name: "ID", uid: "id", sortable: true },
-  { name: "FRIST NAME", uid: "firstName", sortable: true },
-  { name: "LAST NAME", uid: "lastName", sortable: true },
-  { name: "EMAIL", uid: "email", sortable: true },
-  { name: "PHONE NUMBER", uid: "phoneNumber", sortable: true },
-  { name: "ADDRESS", uid: "address", sortable: true },
-  { name: "REGISTERED", uid: "registered", sortable: true },
-  { name: "ADMIN NOTES", uid: "adminNotes" },
-  { name: "ACTIONS", uid: "actions" },
-];
+import {
+  INITIAL_DESKTOP_VISIBLE_COLUMNS,
+  INITIAL_MOBILE_VISIBLE_COLUMNS,
+  columns,
+} from "@/config/data";
+import { ModalComponent } from "./Modal/ModalComponent";
 
 export default function UserTable() {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [isLoading, setIsLoading] = React.useState(false);
   const [hasMore, setHasMore] = React.useState(false);
   const [totalUsers, setTotalUsers] = React.useState(0);
   const [visibleColumns, setVisibleColumns] = React.useState(
-    new Set(INITIAL_VISIBLE_COLUMNS)
+    new Set(INITIAL_MOBILE_VISIBLE_COLUMNS)
   );
+  const [modalType, setModalType] = React.useState("add");
+  const [modalData, setModalData] = React.useState<User>();
+
+  useEffect(() => {
+    if (window.innerWidth > 1024)
+      setVisibleColumns(new Set(INITIAL_DESKTOP_VISIBLE_COLUMNS));
+  }, []);
 
   const headerColumns = React.useMemo(() => {
     return columns.filter((column) =>
@@ -119,12 +113,26 @@ export default function UserTable() {
         return (
           <div className="relative flex items-center gap-2">
             <Tooltip color="success" content="Details">
-              <span className="text-lg text-success cursor-pointer active:opacity-50">
+              <span
+                className="text-lg text-success cursor-pointer active:opacity-50"
+                onClick={() => {
+                  setModalData(user);
+                  setModalType("view");
+                  onOpen();
+                }}
+              >
                 <EyeIcon />
               </span>
             </Tooltip>
             <Tooltip color="warning" content="Edit user">
-              <span className="text-lg text-warning cursor-pointer active:opacity-50">
+              <span
+                className="text-lg text-warning cursor-pointer active:opacity-50"
+                onClick={() => {
+                  setModalData(user);
+                  setModalType("edit");
+                  onOpen();
+                }}
+              >
                 <EditIcon />
               </span>
             </Tooltip>
@@ -185,7 +193,10 @@ export default function UserTable() {
             <Button
               color="primary"
               endContent={<PlusIcon />}
-              onClick={() => {}}
+              onClick={() => {
+                setModalType("add");
+                onOpen();
+              }}
             >
               Add New
             </Button>
@@ -204,46 +215,54 @@ export default function UserTable() {
   }, [visibleColumns, list]);
 
   return (
-    <Table
-      isHeaderSticky
-      aria-label="Example table with infinite pagination"
-      baseRef={scrollerRef}
-      topContent={topContent}
-      topContentPlacement="outside"
-      bottomContent={
-        hasMore ? (
-          <div className="flex w-full justify-center">
-            <Spinner ref={loaderRef} color="white" />
-          </div>
-        ) : null
-      }
-      sortDescriptor={list.sortDescriptor}
-      onSortChange={list.sort}
-      classNames={{
-        base: "max-h-[650px]",
-        table: "min-h-[400px]",
-      }}
-    >
-      <TableHeader columns={headerColumns}>
-        {(column) => (
-          <TableColumn key={column.uid} allowsSorting={column.sortable}>
-            {column.name}
-          </TableColumn>
-        )}
-      </TableHeader>
-      <TableBody
-        isLoading={isLoading}
-        items={Object(list.items)}
-        loadingContent={<Spinner color="white" />}
+    <>
+      <Table
+        isHeaderSticky
+        aria-label="Example table with infinite pagination"
+        baseRef={scrollerRef}
+        topContent={topContent}
+        topContentPlacement="outside"
+        bottomContent={
+          hasMore ? (
+            <div className="flex w-full justify-center">
+              <Spinner ref={loaderRef} color="white" />
+            </div>
+          ) : null
+        }
+        sortDescriptor={list.sortDescriptor}
+        onSortChange={list.sort}
+        classNames={{
+          base: "max-h-[650px]",
+          table: "min-h-[400px]",
+        }}
       >
-        {(item: User) => (
-          <TableRow key={item.id}>
-            {(columnKey) => (
-              <TableCell>{renderCell(item, columnKey)}</TableCell>
-            )}
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+        <TableHeader columns={headerColumns}>
+          {(column) => (
+            <TableColumn key={column.uid} allowsSorting={column.sortable}>
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody
+          isLoading={isLoading}
+          items={Object(list.items)}
+          loadingContent={<Spinner color="white" />}
+        >
+          {(item: User) => (
+            <TableRow key={item.id}>
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      <ModalComponent
+        isOpen={isOpen}
+        onClose={onClose}
+        type={modalType}
+        data={modalData}
+      />
+    </>
   );
 }
