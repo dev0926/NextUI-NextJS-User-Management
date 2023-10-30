@@ -12,10 +12,9 @@ import {
 
 import { User } from "@/config/types";
 import { columns } from "@/config/data";
-import axios from "axios";
 
 export const ModalComponent = (props: any) => {
-  const { isOpen, onClose, type, data, userCount } = props;
+  const { isOpen, onClose, type, data, userCount, onAdd, onEdit } = props;
   const [newData, setNewData] = useState<User>(data);
 
   useEffect(() => {
@@ -29,27 +28,10 @@ export const ModalComponent = (props: any) => {
   const onOK = () => {
     switch (type) {
       case "add":
-        axios
-          .post("http://127.0.0.1:50000/users/add", {
-            ...newData,
-            id: userCount + 1,
-          })
-          .then((res) => {
-            console.log(res.data);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+        onAdd({ ...newData });
         break;
       case "edit":
-        axios
-          .post("http://127.0.0.1:50000/users/edit", newData)
-          .then((res) => {
-            console.log(res.data);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+        onEdit({ ...newData });
         break;
       default:
         break;
@@ -91,7 +73,7 @@ export const ModalComponent = (props: any) => {
           <>
             {columns.map(
               (column) =>
-                column.editable && (
+                column.showable && (
                   <Input
                     key={column.uid}
                     variant="flat"
@@ -151,11 +133,13 @@ export const ModalComponent = (props: any) => {
             </ModalHeader>
             <ModalBody>{modalBody()}</ModalBody>
             <ModalFooter>
-              <Button color="danger" variant="light" onPress={onClose}>
-                CANCEL
-              </Button>
+              {type != "view" && (
+                <Button color="danger" variant="light" onPress={onClose}>
+                  CANCEL
+                </Button>
+              )}
               <Button color="primary" onPress={onOK}>
-                OK
+                {type === "view" ? "CLOSE" : type === "add" ? "ADD" : "CHANGE"}
               </Button>
             </ModalFooter>
           </>

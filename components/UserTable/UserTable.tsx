@@ -111,11 +111,37 @@ export default function UserTable() {
       .post("http://127.0.0.1:50000/users/delete", data)
       .then((res) => {
         console.log(res.data);
+        list.sort(list.sortDescriptor);
       })
       .catch((err) => {
         console.log(err);
       });
-    list.reload();
+  };
+
+  const onAdd = (data: User) => {
+    axios
+      .post("http://127.0.0.1:50000/users/add", {
+        ...data,
+      })
+      .then((res) => {
+        console.log(res.data);
+        list.sort(list.sortDescriptor);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const onEdit = (data: User) => {
+    axios
+      .post("http://127.0.0.1:50000/users/edit", data)
+      .then((res) => {
+        console.log(res.data);
+        list.sort(list.sortDescriptor);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   const renderCell = React.useCallback((user: User, columnKey: React.Key) => {
@@ -177,7 +203,7 @@ export default function UserTable() {
           <Input
             isClearable
             className="w-full sm:max-w-[44%]"
-            placeholder="Search by keyword..."
+            placeholder="Search by name or email..."
             startContent={<SearchIcon />}
             value={list.filterText}
             onClear={() => onClear()}
@@ -282,6 +308,8 @@ export default function UserTable() {
         type={modalType}
         data={modalData}
         userCount={totalUsers}
+        onAdd={onAdd}
+        onEdit={onEdit}
       />
     </>
   );
